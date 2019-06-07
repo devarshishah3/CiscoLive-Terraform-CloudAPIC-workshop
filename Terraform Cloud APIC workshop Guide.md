@@ -84,12 +84,11 @@ Use Your favourite editor to create a file main.tf
 Initialize the provider.
 
 	provider "aci" {
-  		username = "lab-user-{usernumber}" #input user number
-  		#password = "CiscoLive2019"
-  		url      = "https://52.52.20.121"
-  		insecure = true
-		  private_key = "admin-509.key"
-      cert_name   = "admin-509-cert"
+  	    username = "lab-user-{usernumber}" #input user number
+  	    url      = "https://52.52.20.121"
+  	    insecure = true
+	    private_key = "admin-509.key"
+            cert_name   = "admin-509-cert"
 	}
 
 ### Task 1:
@@ -99,7 +98,7 @@ A Tenant is a container for all network, security, troubleshooting and L4 – 7 
 Edit <em>variables.tf</em>
 
 	variable "tenant_name" {
-  		default = "tenant-user-{usernumber}" #Please enter the correct usernumber
+  		default = "DEVWKS-1334" 
 	}
 Continue editing <em>main.tf</em>
 

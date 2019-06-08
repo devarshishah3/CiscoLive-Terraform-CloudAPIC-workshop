@@ -100,7 +100,7 @@ A Tenant is a container for all network, security, troubleshooting and L4 – 7 
 Edit <em>variables.tf</em>
 
 	variable "tenant_name" {
-  		default = "DEVWKS-1334" 
+  		default = "DEV-lab-1334" 
 	}
 Continue editing <em>main.tf</em>
 

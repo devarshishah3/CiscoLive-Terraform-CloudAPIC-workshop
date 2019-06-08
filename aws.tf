@@ -38,7 +38,7 @@ resource "aws_instance" "web" {
   associate_public_ip_address = true
   key_name = "clus_workshop"
   tags = {
-    Name = "admin-{usernumber}-ep1" #input usernumber
+    Name = "devwks-{usernumber}-ep1" #input usernumber
   }
 }
 resource "aws_instance" "app" {

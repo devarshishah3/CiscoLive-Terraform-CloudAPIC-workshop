@@ -53,23 +53,25 @@ eg: user1 will be "lab-user-1", user2 will be "lab-user-2"  and so on
 
 
 # LAB
-- 1. Create a Tenant
-	- 2. Create a VRF
-	- 3.	Create a Bridge Domain
-		- 4. Create a Subnet
-	- 5. Create a VMM Domain
-	- 6. Create a Filter
-		- 7. Create a Filter Entry
-	- 8. Create a Contract
-		- 9. Create a Contract Subject and form a relationship to the filter  
-	- 10.	Create an Application Profile
-		- 11.	Create EPGs (2 EPGs). 	Relate each EPG to a VMM Domain, BD create earlier and a Contract.
+
+	1. Create a session to the cloud APIC
+		2. Tenant
+			3. Create a VRF
+			4. Create Filters and Filter Entries
+			5. Create a Contract, Contract Subject and form a relationship to the filters
+			6. Create an Cloud App
+				7. Create an external EPG.
+				8. Create 2 cloud EPGs
+			9.  Create a Cloud Context Profile
+			10. Create a CIDR
+			11. Create a Subnet and add it to an Availability Zone
+
 
 
 
 
 		 
-cd /go/src/github.com/ciscoecosystem/terraform-provider-aci/examples/clus
+	cd /go/src/github.com/ciscoecosystem/terraform-provider-aci/clus-capic
 
 ### Variables
 
@@ -168,50 +170,14 @@ Each user tenant need to have exactly one cloud provider which corresponds to a 
 Cloud Provider is the AWS account which corresponds to a user tenant.
 
 
-resource "aci_cloud_aws_provider" "cloud_apic_provider" {                       
-  name              = "aws"                                                                         
-  tenant_dn         = "${aci_tenant.terraform_ten.id}"                          
-  access_key_id     = "AKIAJCLIIUJAQHKPBJOQ"                                                        
-  secret_access_key = "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"                                    
-  account_id        = "310368696476"                                                                
-  is_trusted        = "no"                                                                          
-}
-
-On the console
-	
-	terraform plan -parallelism=1
-
-and then on success
-
-	terraform apply -parallelism=1
-
-### Task 4:
-#### Create a Subnet
-Subnet is a child object of a BD. You will have to pass the bd's (parents) DN (Distinguished Name)
-
-Edit <em>variables.tf</em>
-
-	variable "bd_subnet" {
-  		type    = "string"
-  		default = "{usernumber}.{usernumber}.{usernumber}.1/24" #input your usernumber
-  		# eg: user1 : 1.1.1.1/24, user2: 2.2.2.1/24, user3: 3.3.3.1/24 
-	}
-
-Continue editing main.tf
-
-	resource "aci_subnet" "bd1_subnet" {
-  		bridge_domain_dn = "${aci_bridge_domain.bd1.id}"
-  		name             = "Subnet"
-  		ip               = "${var.bd_subnet}"
-  	}
-
-On the console
-	
-	terraform plan -parallelism=1
-
-and then on success
-
-	terraform apply -parallelism=1
+	#resource "aci_cloud_aws_provider" "cloud_apic_provider" {                       
+	#  name              = "aws"                                                                         
+	#  tenant_dn         = "${aci_tenant.terraform_ten.id}"                          
+	#  access_key_id     = "Your access key id"                                                        
+	#  secret_access_key = "your secret access key"                                    
+	#  account_id        = "your aws account"                                                                
+	#  is_trusted        = "no"                                                                          
+	#}
 
 
 	
@@ -225,11 +191,11 @@ Create 2 filters. One related to ICMP and the second related to https
 
 	resource "aci_filter" "allow_https" {
   		tenant_dn = "${aci_tenant.terraform_ten.id}"
-  		name      = "allow_https"
+  		name      = "allow_https-{usernumber}" #input usernumber   
 	}
 	resource "aci_filter" "allow_icmp" {
   		tenant_dn = "${aci_tenant.terraform_ten.id}"
-  		name      = "allow_icmp"
+  		name      = "allow_icmp-{usernumber}" #input usernumber   
 	}
 	
 On the console
@@ -249,7 +215,7 @@ Create a filter entry for https and icmp
 Filter Entry is a child object of a Filter. You will have to pass the Filter's (parents) DN (Distinguished Name)
 
 	resource "aci_filter_entry" "https" {
-  		name        = "https"
+  		name        = "https-{usernumber}" #input usernumber   
   		filter_dn   = "${aci_filter.allow_https.id}"
   		ether_t     = "ip"
   		prot        = "tcp"
@@ -259,7 +225,7 @@ Filter Entry is a child object of a Filter. You will have to pass the Filter's (
 	}
 
 		resource "aci_filter_entry" "icmp" {
-  		name        = "icmp"
+  		name        = "icmp-{usernumber}" #input usernumber   
   		filter_dn   = "${aci_filter.allow_icmp.id}"
   		ether_t     = "ip"
   		prot        = "icmp"
@@ -282,7 +248,7 @@ Contract is a child object of a tenant. You will have to pass the tenant's (pare
 
 	resource "aci_contract" "contract_epg1_epg2" {
   		tenant_dn = "${aci_tenant.terraform_ten.id}"
-  		name      = "Web"
+  		name      = "Web-{usernumber}" #input usernumber   
 	}
 	
 On the console
@@ -320,10 +286,10 @@ Cloud Application Profile is a collection of end points and contract between the
 
 Cloud Application Profile is a child object of a tenant. You will have to pass the tenant's (parents) DN (Distinguished Name)
 
-resource "aci_cloud_applicationcontainer" "app1" {                                                  
-  tenant_dn = "${aci_tenant.terraform_ten.id}"                                                      
-  name      = "app-{usernumber}"#input your usernumber                                                                               
-} 
+	resource "aci_cloud_applicationcontainer" "app1" {                                                  
+	  tenant_dn = "${aci_tenant.terraform_ten.id}"                                                      
+	  name      = "app-{usernumber}"#input your usernumber                                                                               
+	} 
 	
 On the console
 	
@@ -333,8 +299,8 @@ and then on success
 
 	terraform apply -parallelism=1
 	
-###Task 11:
-#### Create 2 End Point Groups(EPGs). 	Relate each EPG to a VRF and define and Endpoint selector.
+### Task 11:
+#### Create 3 End Point Groups(EPGs). 	Relate each EPG to a VRF and define and Endpoint selector.
 
 End Points are devices which attach to the network either virtually or physically, 
 
@@ -360,33 +326,47 @@ A consumed contract (outbound rule) and a provided contract (inbound rule) must 
 EPG is a child object of a Cloud Application Profile. You will have to pass the Cloud Application Profiles's (parents) DN (Distinguished Name)
 
 
-resource "aci_cloud_e_pg" "cloud_apic_epg1" {                                                        
-  name                             = "epg1"                                                         
-  cloud_applicationcontainer_dn    = "${aci_cloud_applicationcontainer.app1.id}"                    
-  relation_fv_rs_prov              = ["${aci_contract.contract_epg1_epg2.name}"]                    
-  relation_fv_rs_cons              = ["${aci_contract.contract_epg1_epg2.name}"]                    
-  relation_cloud_rs_cloud_e_pg_ctx = "${aci_vrf.vrf1.name}"                                         
-}
+	resource "aci_cloud_e_pg" "cloud_apic_epg1" {                                                        
+	  name                             = "epg1"                                                         
+	  cloud_applicationcontainer_dn    = "${aci_cloud_applicationcontainer.app1.id}"                    
+	  relation_fv_rs_prov              = ["${aci_contract.contract_epg1_epg2.name}"]                    
+	  relation_fv_rs_cons              = ["${aci_contract.contract_epg1_epg2.name}"]                    
+	  relation_cloud_rs_cloud_e_pg_ctx = "${aci_vrf.vrf1.name}"                                         
+	}
 
-resource "aci_cloud_endpoint_selector" "cloud_ep_selector1" {                                        
-  cloud_e_pg_dn    = "${aci_cloud_e_pg.cloud_apic_epg1.id}"                                          
-  name             = "devnet-ep1-select={usernumber}" #input your usernumber                                                           
-  match_expression = "custom:Name=='devwks-{usernumber}-ep1'" #input your usernumber                                             
-}
+	resource "aci_cloud_endpoint_selector" "cloud_ep_selector1" {                                        
+	  cloud_e_pg_dn    = "${aci_cloud_e_pg.cloud_apic_epg1.id}"                                          
+	  name             = "devnet-ep1-select-{usernumber}" #input your usernumber                                                           
+	  match_expression = "custom:Name=='devwks-{usernumber}-ep1'" #input your usernumber                                             
+	}
 
-resource "aci_cloud_e_pg" "cloud_apic_epg2" {                                                        
-  name                             = "epg1"                                                         
-  cloud_applicationcontainer_dn    = "${aci_cloud_applicationcontainer.app1.id}"                    
-  relation_fv_rs_prov              = ["${aci_contract.contract_epg1_epg2.name}"]                    
-  relation_fv_rs_cons              = ["${aci_contract.contract_epg1_epg2.name}"]                    
-  relation_cloud_rs_cloud_e_pg_ctx = "${aci_vrf.vrf1.name}"                                         
-}
+	resource "aci_cloud_e_pg" "cloud_apic_epg2" {                                                        
+	  name                             = "epg1"                                                         
+	  cloud_applicationcontainer_dn    = "${aci_cloud_applicationcontainer.app1.id}"                    
+	  relation_fv_rs_prov              = ["${aci_contract.contract_epg1_epg2.name}"]                    
+	  relation_fv_rs_cons              = ["${aci_contract.contract_epg1_epg2.name}"]                    
+	  relation_cloud_rs_cloud_e_pg_ctx = "${aci_vrf.vrf1.name}"                                         
+	}
 
-resource "aci_cloud_endpoint_selector" "cloud_ep_selector2" {                                        
-  cloud_e_pg_dn    = "${aci_cloud_e_pg.cloud_apic_epg1.id}"                                          
-  name             = "devnet-ep2-select-{usernumber}" #input your usernumber                                                             
-  match_expression = "custom:Name=='devwks-{usernumber}-ep2'" #input your usernumber                                             
-}
+	resource "aci_cloud_endpoint_selector" "cloud_ep_selector2" {                                        
+	  cloud_e_pg_dn    = "${aci_cloud_e_pg.cloud_apic_epg1.id}"                                          
+	  name             = "devnet-ep2-select-{usernumber}" #input your usernumber                                                             
+	  match_expression = "custom:Name=='devwks-{usernumber}-ep2'" #input your usernumber                                             
+	}
+	
+	resource "aci_cloud_external_e_pg" "cloud_epic_ext_epg" {                       
+	  cloud_applicationcontainer_dn    = "${aci_cloud_applicationcontainer.app1.id}"                    
+	  name                             = "devnet-{usernumber}-inet"   #input usernumber                                         
+	  relation_fv_rs_prov              = ["${aci_contract.contract_epg1_epg2.name}"]                    
+	  relation_fv_rs_cons              = ["${aci_contract.contract_epg1_epg2.name}"]                    
+	  relation_cloud_rs_cloud_e_pg_ctx = "${aci_vrf.vrf1.name}"                                         
+	}                                                                                                   
+
+	resource "aci_cloud_endpoint_selectorfor_external_e_pgs" "ext_ep_selector" {                        
+	  cloud_external_e_pg_dn = "${aci_cloud_external_e_pg.cloud_epic_ext_epg.id}"   
+	  name                   = "devnet-ext-{usernumber}" #input userbumber                                                             
+	  subnet                 = "0.0.0.0/0"                                                              
+	}
   	
  On the console
 	
@@ -406,15 +386,15 @@ Cloud Context Profile is a child of a Tenant
 Cloud Context Profile needs to be associated to a VRF
 
 
-resource "aci_cloud_context_profile" "context_profile" {                                            
-  name                     = "devnet-admin-cloud-ctx-profile"                                       
-  description              = "context provider created with terraform"                              
-  tenant_dn                = "${aci_tenant.terraform_ten.id}"                                       
-  primary_cidr             = "10.23{usernumber}.231.1/16"  #input usernumber                                                    
-  region                   = "us-west-1"                                                            
-  relation_cloud_rs_to_ctx = "${aci_vrf.vrf1.name}"                                                 
-  depends_on               = ["aci_filter_entry.icmp"]                                              
-} 
+	resource "aci_cloud_context_profile" "context_profile" {                                            
+	  name                     = "devnet-cloud-ctx-profile-3"                                       
+	  description              = "context provider created with terraform"                              
+	  tenant_dn                = "${aci_tenant.terraform_ten.id}"                                       
+	  primary_cidr             = "10.23{usernumber}.231.1/16"  #input usernumber                                                    
+	  region                   = "us-west-1"                                                            
+	  relation_cloud_rs_to_ctx = "${aci_vrf.vrf1.name}"                                                 
+	  depends_on               = ["aci_filter_entry.icmp"]                                              
+	} 
 
 
 
@@ -431,33 +411,58 @@ and then on success
 
 Create a Cloud CIDR for and attach it to the cloud context profile
 
-data "aci_cloud_cidr_pool" "prim_cidr" {                                                            
-  cloud_context_profile_dn = "${aci_cloud_context_profile.context_profile.id}"                      
-  addr                     = "10.23{usernumber}.231.1/16" #input usernumber                                                      
-  name                     = "10.23{usernumber}.231.1/16" #input usernumber                                                     
-}
+	data "aci_cloud_cidr_pool" "prim_cidr" {                                                            
+	  cloud_context_profile_dn = "${aci_cloud_context_profile.context_profile.id}"                      
+	  addr                     = "10.23{usernumber}.231.1/16" #input usernumber                                                      
+	  name                     = "10.23{usernumber}.231.1/16" #input usernumber                                                     
+	}
+
+On the console
+	
+	terraform plan -parallelism=1
+
+and then on success
+
+	terraform apply -parallelism=1
+
 
 ### Task 4:
 #### Create a Cloud Subnet
 
 Create a Cloud Subnet for your ec2 instances. This subnet should be from the CIDR allocated earlier and should be attached to an Availability Zone on AWS
 
-resource "aci_cloud_subnet" "cloud_apic_subnet" {                                                   
-  cloud_cidr_pool_dn            = "${data.aci_cloud_cidr_pool.prim_cidr.id}"                        
-  name                          = "10.23{usernumber}.231.1/24"  #input usernumber                                               
-  ip                            = "10.23{usernumber}.231.1/24"  #input usernumber                                               
-  relation_cloud_rs_zone_attach = "uni/clouddomp/provp-aws/region-us-west-1/zone-us-west-1a"        
-}
+	resource "aci_cloud_subnet" "cloud_apic_subnet" {                                                   
+	  cloud_cidr_pool_dn            = "${data.aci_cloud_cidr_pool.prim_cidr.id}"                        
+	  name                          = "10.23{usernumber}.231.1/24"  #input usernumber                                               
+	  ip                            = "10.23{usernumber}.231.1/24"  #input usernumber                                               
+	  relation_cloud_rs_zone_attach = "uni/clouddomp/provp-aws/region-us-west-1/zone-us-west-1a"        
+	}
+
+On the console
+	
+	terraform plan -parallelism=1
+
+and then on success
+
+	terraform apply -parallelism=1
+
 
 ### Task :
 #### Create an output
 
 Output information for the ACI created VPC for EC2 instance to consume
 
-output "demo_vpc_name" {                                                                            
-  value = "context-[${aci_vrf.vrf1.name}]-addr-[${aci_cloud_context_profile.context_profile.primary_cidr}]"
-}
+	output "demo_vpc_name" {                                                                            
+	  value = "context-[${aci_vrf.vrf1.name}]-addr-[${aci_cloud_context_profile.context_profile.primary_cidr}]"
+	}
 
+On the console
+	
+	terraform plan -parallelism=1
+
+and then on success
+
+	terraform apply -parallelism=1
 
 #Output
 

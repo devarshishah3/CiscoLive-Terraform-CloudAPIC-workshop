@@ -1,9 +1,9 @@
-# TERRAFORM-ACI WORKSHOP
+# TERRAFORM-CloudAPIC WORKSHOP
 
 ### Go to the terminal and run: 
 
-	docker run -it --entrypoint /bin/bash devarshishah3/terraformwkshp:capic
-	cd $GOPATH/src/github.com/ciscoecosystem/terraform-provider-aci/examples/clus-capic
+	docker run -it --entrypoint /bin/bash devarshishah3/terraformwkshp:capiclatest
+	cd $GOPATH/src/github.com/ciscoecosystem/terraform-provider-aci/clus-capic
 	
 
 ### What does this docker container have: 
@@ -54,24 +54,22 @@ eg: user1 will be "lab-user-1", user2 will be "lab-user-2"  and so on
 
 # LAB
 
-	1. Create a session to the cloud APIC
-		2. Tenant
-			3. Create a VRF
-			4. Create Filters and Filter Entries
-			5. Create a Contract, Contract Subject and form a relationship to the filters
-			6. Create an Cloud App
-				7. Create an external EPG.
-				8. Create 2 cloud EPGs
-			9.  Create a Cloud Context Profile
+	1. Create a Tenant
+		2. Create a VRF
+		3. Create a Cloud Profile
+		4. Create Filters and Filter Entries
+		5. Create a Contract, Contract Subject and form a relationship to the filters
+		6. Create an Cloud App
+			7. Create 2 cloud EPGs with selectors
+			8. Create an external EPG with selector
+		9.  Create a Cloud Context Profile
 			10. Create a CIDR
 			11. Create a Subnet and add it to an Availability Zone
+		12. Create an output to be consumed by AWS.tf 
 
 
 
 
-
-		 
-	cd /go/src/github.com/ciscoecosystem/terraform-provider-aci/clus-capic
 
 ### Variables
 
@@ -181,7 +179,7 @@ Cloud Provider is the AWS account which corresponds to a user tenant.
 
 
 	
-### Task 6:
+### Task 4:
 #### Create a Filter
 A filter classifies a collection of network packet  attributes
 
@@ -206,7 +204,7 @@ and then on success
 
 	terraform apply -parallelism=1
 	
-### Task 7:
+
 #### Create a Filter entry
 Filter entry is a network packet  attributes. It selects a packets based on the attributes specified.
 
@@ -240,7 +238,7 @@ and then on success
 
 	terraform apply -parallelism=1
 
-### Task 8:
+### Task 5:
 #### Create a Contact
 Contract is a set of rules governing communication between EndPoint Groups
 
@@ -259,7 +257,7 @@ and then on success
 
 	terraform apply -parallelism=1
 	
-### Task 9:
+
 #### Create a Contact Subject
 Contract Subject sets the Permit/Deny, Qos policies of the Contract. Relationship needs to be created from the subject contract to filter entry.
 
@@ -279,7 +277,7 @@ and then on success
 
 	terraform apply -parallelism=1
 	
-### Task 10:
+### Task 6:
 #### Create an Cloud Application Profile
 
 Cloud Application Profile is a collection of end points and contract between them
@@ -299,21 +297,15 @@ and then on success
 
 	terraform apply -parallelism=1
 	
-### Task 11:
-#### Create 3 End Point Groups(EPGs). 	Relate each EPG to a VRF and define and Endpoint selector.
+### Task 7 and 8:
+#### Create 2 End Point Groups(EPGs) and an external EPG. Relate each EPG to a VRF and define an Endpoint selector.
 
 End Points are devices which attach to the network either virtually or physically, 
 
 e.g:
-Ec2 instance
-Virtual Machine
-Physical Server (running Bare Metal or Hypervisor)
-External Layer 2 device
-External Layer 3 device
-VLAN
-Subnet
-Firewall
-Load balancer
+EC2 instance
+S3 bucket
+etc.
 
 EPG is a logical collection of End Points 
 
@@ -376,7 +368,7 @@ and then on success
 
 	terraform apply -parallelism=1
 
-### Task 5:
+### Task 9:
 #### Create a Cloud Context Profile
 
 Cloud Context Profile is a new class in ACI which ties the AWS Regions, CIDRs and Subnets to a VRF
@@ -406,7 +398,7 @@ and then on success
 
 	terraform apply -parallelism=1
   
-### Task 4:
+### Task 10:
 #### Create a Cloud CIDR
 
 Create a Cloud CIDR for and attach it to the cloud context profile
@@ -426,7 +418,7 @@ and then on success
 	terraform apply -parallelism=1
 
 
-### Task 4:
+### Task 11:
 #### Create a Cloud Subnet
 
 Create a Cloud Subnet for your ec2 instances. This subnet should be from the CIDR allocated earlier and should be attached to an Availability Zone on AWS
@@ -447,7 +439,7 @@ and then on success
 	terraform apply -parallelism=1
 
 
-### Task :
+### Task 12:
 #### Create an output
 
 Output information for the ACI created VPC for EC2 instance to consume
@@ -464,33 +456,26 @@ and then on success
 
 	terraform apply -parallelism=1
 
-#Output
+# Output
 
-If all the configuration went through correctly and the varibles in variables.tf are input correctly, you are ready to connect the VMs
-
-- 1. Log into the vcenter client 
-- 2. Go to Networking and check if the ACI DVS is created 
-- 3. Check if the port group for the EPGs have been created. It should match with your tenant/application_profile/epg. eg lab-user-1 should have a port group <strong>tenant-user-1/ap1/epg1</strong> and <strong>tenant-user-1/ap1/epg2</strong> , lab-user-3 should have a port group <strong>tenant-user-3/ap1/epg1</strong> and <strong>tenant-user-3/ap1/epg2</strong>
-- 4. Spin up a VM and attach a VNIC with the EPG port group created
-- 5. Once the VM is up assign an IP address to the attached portgroup interface from the configured subnet
-- 6. Repeat the same for the other VM and assign it to the other EPG portgroup
-- 7. Make sure the VMs are able to ping each other 
+If all the configuration went through correctly , you are ready to connect the AWS EC2 instances to this topology
 
 
-##Bonus Exercise:
-In the same directory, there is <em>vcenter.tf.bkp</em>
+# Bonus
+- 1. Log into the AWS account and go to the right region 
+- 2. Go to Services and check VPC
+- 3. Check if the VPC corresponding to cloud APIC's VRF is created. 
+- 4. Check if the CIDR,subnet and security group rules related to Cloud APIC are created 
+- 5. Copy aws.tf into your terraform working directory
+- 5. Enter your account info related to AWS 
+- 6. Enter the correct tags matching ep selector
+- 6. Run Terraform plan and apply again
+- 7. Make sure the EC2 instances are up and use the .pem file provided in the working dir 
 
-This has the example of spinning up a VM on vcenter and associating the vNIC to the correct EPG portgroup
-
-	mv vcenter.tf.bkp vcenter.tf
-	
-It makes use of same <em>variable.tf</em>
-Modify <em>variable.tf</em> according to your vcenter environment
-
-<strong>Note: The VMs will take about an hour to spin up as we are using a template and the connection to Terraform might be terminated. If so, run terraform plan and apply again</strong>
 
 
-#Resources:
+
+# Resources:
 
 Terraform ACI provider: Use branch <strong>master</strong>
 <https://github.com/ciscoecosystem/terraform-provider-aci>

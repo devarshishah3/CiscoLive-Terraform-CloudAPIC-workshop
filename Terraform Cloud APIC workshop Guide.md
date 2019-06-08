@@ -341,7 +341,7 @@ EPG is a child object of a Cloud Application Profile. You will have to pass the 
 	}
 
 	resource "aci_cloud_e_pg" "cloud_apic_epg2" {                                                        
-	  name                             = "epg1"                                                         
+	  name                             = "epg2"                                                         
 	  cloud_applicationcontainer_dn    = "${aci_cloud_applicationcontainer.app1.id}"                    
 	  relation_fv_rs_prov              = ["${aci_contract.contract_epg1_epg2.name}"]                    
 	  relation_fv_rs_cons              = ["${aci_contract.contract_epg1_epg2.name}"]                    
@@ -349,7 +349,7 @@ EPG is a child object of a Cloud Application Profile. You will have to pass the 
 	}
 
 	resource "aci_cloud_endpoint_selector" "cloud_ep_selector2" {                                        
-	  cloud_e_pg_dn    = "${aci_cloud_e_pg.cloud_apic_epg1.id}"                                          
+	  cloud_e_pg_dn    = "${aci_cloud_e_pg.cloud_apic_epg2.id}"                                          
 	  name             = "devnet-ep2-select-{usernumber}" #input your usernumber                                                             
 	  match_expression = "custom:Name=='devwks-{usernumber}-ep2'" #input your usernumber                                             
 	}

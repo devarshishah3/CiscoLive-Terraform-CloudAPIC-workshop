@@ -319,7 +319,7 @@ EPG is a child object of a Cloud Application Profile. You will have to pass the 
 
 
 	resource "aci_cloud_e_pg" "cloud_apic_epg1" {                                                        
-	  name                             = "epg1"                                                         
+	  name                             = "epg1-{usernumber}" #input usernumber                                           
 	  cloud_applicationcontainer_dn    = "${aci_cloud_applicationcontainer.app1.id}"                    
 	  relation_fv_rs_prov              = ["${aci_contract.contract_epg1_epg2.name}"]                    
 	  relation_fv_rs_cons              = ["${aci_contract.contract_epg1_epg2.name}"]                    
@@ -333,8 +333,7 @@ EPG is a child object of a Cloud Application Profile. You will have to pass the 
 	}
 
 	resource "aci_cloud_e_pg" "cloud_apic_epg2" {                                                        
-	  name                             = "epg2"                                                         
-	  cloud_applicationcontainer_dn    = "${aci_cloud_applicationcontainer.app1.id}"                    
+	  name                             = "epg2-{usernumber}" #input usernumber                                              	  cloud_applicationcontainer_dn    = "${aci_cloud_applicationcontainer.app1.id}"                    
 	  relation_fv_rs_prov              = ["${aci_contract.contract_epg1_epg2.name}"]                    
 	  relation_fv_rs_cons              = ["${aci_contract.contract_epg1_epg2.name}"]                    
 	  relation_cloud_rs_cloud_e_pg_ctx = "${aci_vrf.vrf1.name}"                                         
